@@ -1,0 +1,35 @@
+## README
+
+Repository codes for Analyzing the Hospital Discharge Status of Patients diagnosed with Burn Injury
+
+
+#	Introduction
+In the realm of healthcare, where each decision can be a matter of life and death, the ability to predict patient outcomes accurately holds profound significance. This study is dedicated to the critical task of forecasting the likelihood of survival among patients who have endured the harrowing experience of burn injuries. The primary objective is to construct a predictive model that can effectively estimate the probability of a patient surviving a burn injury based on the selected set of variables. In essence, we aim to answer the pivotal question: What are the determinants and indicators that influence a patient's chances of survival following a burn injury? By employing sophisticated analytical techniques, we intend to unearth patterns, relationships, and insights that can assist healthcare professionals in making informed decisions and optimizing patient care strategies.
+
+
+# Description of Data Variables
+FACILITY	1 - 40            -   Burn Facility
+DEATH		0 = Alive (Survive)   1 = Dead (Not Survive)        -   Hospital Discharge Status
+AGE	in years	        -   The infected person/patient’s age in years at admission
+GENDER	0 = Female   1 = Male	        - Gender of infected person/patient
+RACE	0 = Non-White   1 = White	        -   Race of infected person/patient
+TBSA	0 to 100%	        -   Total burn surface area
+INH_INJ	0 = No   1 = Yes        - 	Burn involved inhalation injury
+FLAME	0 = Flame absent        1 = Flame present	    -  Flame involved in burn
+
+
+# Correlation
+Correlations is used to determine whether and to what extent two variables are related linearly. Pearson's Correlation Coefficient, one of the most commonly used correlation measures, provides a numerical value that represents the strength and direction of this linear relationship. The correlation matrix in the figure below shows that the dependent variable is not/least related with FACILITY, GENDER, RACE as they lies between [0.2, 0]. Hence, we remove those variable from the dataset for further analysis.
+There is a moderate positive correlation of 0.411 between DEATH and AGE. This suggests that older patients tend to have a higher likelihood of not surviving the burn injury.
+There is a strong positive correlation of 0.629 between DEATH and TBSA. This suggests that as the percentage of total body surface area burned (TBSA) increases, the likelihood of not surviving the burn injury also increases.
+DEATH and INH_INJ have a strong positive correlation of 0.460, indicating that patients with inhalation injuries tend to have a higher likelihood of not surviving the burn injury.
+The correlation is 0.284, indicating a moderate positive relationship between DEATH and FLAME. This suggests that injuries caused by flame burns may be associated with a higher likelihood of not surviving the burn injury.
+
+
+# Evaluation of the Model
+The model is observed to be 92% accurate, with 98% and 58% Sensitivity and Specificity respectively. 421 values of o's predicted correctly and 41 values of 1's is predicted correctly out of total 500 values. We can analyse from the above output that the number of patients surviving a burn injury is more than those who do not survive it.
+
+
+#	Limitations 
+•	Limited number of variables in the data: This may result in a loss of valuable information that could have contributed to a more comprehensive understanding of the burn study.
+•	Due to no association or variable correlation in the burn study data, some variables are not included in the analysis

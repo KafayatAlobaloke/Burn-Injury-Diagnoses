@@ -1,0 +1,243 @@
+---
+Hospital Discharge Status of Patients diagnosed with Burn Injury
+  Author: Kafayat Alobaloke
+---
+
+```{r}
+library('corrplot')
+library('ggplot2')
+library('tidyverse')
+library('caret')
+library('caTools')
+```
+
+```{r}
+# Importing the data file
+data <- read.csv('burn.csv')
+```
+
+```{r}
+# DISPLAY THE FIRST FEW ROWS OF DATA
+head(data)
+```
+
+```{r}
+# DISPLAY THE NUMBER OF ROWS AND COLUMNS
+nrow(data)
+ncol(data)
+```
+
+```{r}
+# Understanding the datatype of dataset
+str(data)
+```
+
+```{r}
+# DISPLAY THE SUMMARY
+summary(data)
+```
+
+After analyzing the summary of data we observe that no null/NA is present in our data but all the columns are considered as integer, even the categorical data except AGE and TBSA which is numeric. So, we will perform some data preprocessing steps to convert the categorical column to factor.
+
+```{r}
+cor <- round(cor(data[1:8]),3)
+cor
+```
+
+```{r}
+# Displaying the correlation matrix
+jpeg(file="correlation.jpeg")
+corr <- cor(data)
+# Visualize the correlation matrix
+corrplot(corr)
+dev.off()
+```
+
+After observing above matrix we observe the our dependent variable is not/least related with FACILITY, GENDER, RACE as they lies between [0.2, 0]. So, we can remove those variable from the dataset in our next data wrangling step
+
+## Data wrangling and counting missing values
+```{r}
+# Deleting not related variables
+data = subset(data, select = c(-FACILITY,-GENDER,-RACEC))
+```
+
+```{r}
+# Converting the integer data to factor
+data$DEATH <- as.factor(data$DEATH)
+data$INH_INJ <- as.factor(data$INH_INJ)
+data$FLAME <- as.factor(data$FLAME)
+```
+
+```{r}
+# Summary after pre-processing the data
+summary(data)
+```
+
+```{r}
+# DISPLAY THE NUMBER OF NAs IN EACH COLUMN
+colSums(is.na(data))
+```
+All the continuous variables are represented with the histogram and the categorical data is represented using bar graph.
+## Target variable Analysis
+```{r}
+# Bar plot for DEATH (hospital discharge status) 
+data$DEATH <- as.factor(data$DEATH)
+jpeg(file="barplot.jpeg")
+ggplot(data, aes(x=data$DEATH, fill=data$DEATH)) + 
+  geom_bar() +
+  xlab("Hospital Discharge Status") +
+  ylab("Count") +
+  ggtitle("Analysis of Surviving or not Surviving Burn Injury") +
+  scale_fill_discrete(name = "Discharge Status", labels = c("Alive", "Dead"))
+dev.off()
+```
+From the above plot, we can observe that the number of people that survive the burn injury is more than with a number of people that did not survive it. We will perform further analysis to find out more about the relevant parameter that contributes to patients surviving the burn injury.
+
+## Age variable Analysis
+```{r}
+# Group the different ages in three groups (young, middle, old)
+young <- data[which((data$AGE<10)), ]
+middle <- data[which((data$AGE>=10)&(data$AGE<50)), ]
+elderly <- data[which(data$AGE>50), ]
+groups <- data.frame(age_group = c("young","middle","elderly"), group_count = c(NROW(young), NROW(middle), NROW(elderly)))
+
+#ploting different age groups
+jpeg(file="barplot2.jpeg")
+ggplot(groups, aes(x=age_group, y=group_count, fill=age_group)) + 
+  ggtitle("Age Analysis") +
+  xlab("Age Group")  +
+  ylab("group Count") +
+  geom_bar(stat="identity") +
+  scale_fill_discrete(name = "Age Group", labels = c("Elderly", "Middle", "Young"))
+dev.off()
+```
+
+```{r}
+# Density graph for TBSA (Total burn surface area)
+jpeg(file="densityplot.jpeg")
+ggplot(data, aes(x = TBSA, fill = DEATH)) +
+  geom_density(alpha=0.5) +
+  scale_fill_discrete(name = "Burn injury", labels = c("Alive", "Dead"))
+dev.off()
+```
+From the above graph, we can observe that patients' chances of surviving the burn injury is significantly higher than and their chance of not surviving it base on the total burn surface area. This observation is inline with the association of this variable and the target variable i.e., hospital discharge status. 
+
+ConcLusion of EDA
+At the start,I hypothesized, using (Google) domain knowledge that factors such as cholesterol and age would be major factors in the model. This dataset didn’t show that. Instead, the number of major factors and aspects of ECG results dominated. I actually feel like I’ve learnt a thing or two about heart disease!
+
+
+
+## Model implementation
+The target parameter (DEATH) is a binary variable having values as 0 - alive  and 1 - dead. So, I am implementing logistic regression for predicting the dependent variable values.
+
+```{r}
+# To get the same set every time we run the code
+set.seed(123)
+```
+
+```{r}
+data <- data[, c(1, 2, 3, 4, 5)]
+
+# Dividing the data set in train and test datasets
+dataSample <- sample.split(data[,ncol(data)-1], SplitRatio=0.50)
+trainSet = subset(data,dataSample == TRUE)
+testSet = subset(data,dataSample == FALSE)
+```
+
+```{r}
+View(trainSet)
+```
+
+```{r}
+View(testSet)
+```
+
+```{r}
+nrow(testSet)
+```
+
+```{r}
+View(testSet[,-2])
+```
+
+```{r}
+# Creating a logistic model
+logisticmodel <- glm(DEATH~.,data = trainSet, family = "binomial")
+
+# Summary of the created model
+summary(logisticmodel)
+```
+## Interpretation
+
+The coefficient estimate of the variable AGE is b = 0.0865, which is positive. This means that an increase in AGE is associated with increase in the probability of not surviving a burn injury.
+
+The coefficient estimate of the variable TBSA is b = 0.0893, which is positive. This means that an increase in TBSA is associated with increase in the probability of not surviving a burn injury.
+
+The coefficient estimate of the variable INH_INJ is b = 0.9887, which is positive. This means that an increase in INH_INJ is associated with increase in the probability of not surviving a burn injury.
+
+The coefficient estimate of the variable FLAME is b = 0.7687, which is positive. This means that an increase in FLAME is associated with increase in the probability of not surviving a burn injury.
+
+AGE and TBSA are the most significant variable for predicting if a patient will survive the burn injury or not.
+
+The z-test value is associated with testing the significance of the parameter listed in the first column. z-test value of -8.294 refers to the z-test of the (Intercept) -8.8118 divided by the standard error of that estimate 1.0624.
+
+The AIC value is used to state the goodness of the model. The smaller the value of AIC the better the model performing.
+
+```{r}
+expb <- exp(coef(logisticmodel))
+expb
+```
+
+```{r}
+# Making prediction with the above model
+predictdata <- predict(logisticmodel, newdata = testSet[, -1], type="response")
+pred <- ifelse(predictdata>=0.5,1,0)
+pred <- as.factor(pred)
+observed <- testSet[,1]
+```
+
+```{r}
+# Checking the accuracy of the model
+confusionMatrix(pred, observed)
+```
+
+From the confusion matrix we can observe, our model is 92% accurate. 415 values of o's predicted correctly and 44 values of 1's is predicted correctly out of total 500 values. We can analyse from the above output that the number of patients surviving a burn injury is more than those who do not survive it. 
+
+
+
+## Residual plot
+```{r}
+#get list of residuals
+res <- resid(logisticmodel)
+```
+
+```{r}
+#produce residual vs. fitted plot
+plot(fitted(logisticmodel), res)
+```
+
+```{r}
+#Create density plot of residuals
+plot(density(res))
+```
+
+```{r}
+#create Q-Q plot for residuals
+qqnorm(res)
+qqline(res)
+```
+
+```{r}
+#saving plots
+jpeg(file="saving_plot1.jpeg")
+dev.off()
+```
+
+
+
+
+
+ggsave(irma_fatalities_plot, 
+       filename = "irma_fatalities.pdf",
+       device = "pdf",
+       height = 6, width = 5, units = "in")
